@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>My experiment</title>
+    <script src="jspsych-6.3.1/jspsych.js"></script>
+    <script src="jspsych-6.3.1/plugins/jspsych-html-keyboard-response.js"></script>
+    <script src="jspsych-6.3.1/plugins/jspsych-external-html.js"></script>
+    <script src="jspsych-6.3.1/plugins/jspsych-image-keyboard-response.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <link href="jspsych-6.3.1/css/jspsych.css" rel="stylesheet" type="text/css">
+  </head>
+  <body></body>
+  <script>
+
+    var SUPABASE_URL = 'https://snjehmlvdsfnxlcfydzj.supabase.co'
+    var SUPABASE_KEY =
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIiwiaWF0IjoxNjI3MTg5MTQzLCJleHAiOjE5NDI3NjUxNDN9.Z025UViKvbY5lraGseW7mPUwdpfV7huemcZ38z2J2m8'
+    
+    var supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
+    window.userToken = null
+
+    var timeline = [];
+
+    var invierto = jsPsych.randomization.sampleWithReplacement([1,0],1)[0];
+    console.log(invierto);
+    var rango = 100 , cantidad_de_tests = 10 , numero_que_busco = rango/2;
+    var array = [];
+    for (let index = 1; index <= rango; index++) {
+      if(index != numero_que_busco) array.push(index);
+    }
+    
+    var instructions = {
+      type: "html-keyboard-response",
+      choices: ['Enter'],
+      stimulus: `
+        <p>En este experimento de no más de 4 minutos, verás números del 1 al ${rango}.</p> <p>Tu tarea consistirá 
+          en, en cada caso, determinar si el número es mayor o menor a ${numero_que_busco} 
+          lo más rápido posible.</p>
+        <p>Si el número en pantalla es <span style = "color: red; font-weight: bold">mayor</span> 
+          a ${numero_que_busco}, presiona la tecla <span style = "color: red; font-weight: bold">
+            ${invierto ? "B" : "Y"}</span>.</p>
+            <p>Si el número en pantalla es <span style = "color: blue; font-weight: bold">menor</span> 
+          a ${numero_que_busco}, presiona la tecla <span style = "color: blue; font-weight: bold">
+            ${invierto ? "Y" : "B"}</span>.</p>
+        <p>Al continuar, estás indicando tu consentimiento para participar de este 
+          experimento de forma anónima.</p>
+        <p>Persiona <strong>Enter</strong> para comenzar.</p>
+      `,
+    };
+    timeline.push(instructions);
+    
+    var warning = {
+      type: "html-keyboard-response",
+      choices: ['Enter'],
+      stimulus: `
+        <p>Vamos con algunos números de prueba...</p>
+      `,
+      post_trial_gap: 1500
+    };
+    timeline.push(warning);
+    
+    
+
+    var numeros = jsPsych.randomization.sampleWithReplacement(array,5);
+    for (let index = 0; index < 5; index++) {
+      var test = {
+        type: 'html-keyboard-response',
+        stimulus: `<p>Si el número en pantalla es <span style = "color: red; font-weight: bold">mayor</span> 
+          a ${numero_que_busco}, presiona la tecla <span style = "color: red; font-weight: bold">
+            ${invierto ? "B" : "Y"}</span>.</p>
+            <p>Si el número en pantalla es <span style = "color: blue; font-weight: bold">menor</span> 
+          a ${numero_que_busco}, presiona la tecla <span style = "color: blue; font-weight: bold">
+            ${invierto ? "Y" : "B"}</span>.</p>
+        <h1 style = 'font-size: 15vw'>${numeros[index]}</h1>`,
+        choices: ['y', 'b'] ,
+        on_finish: function(data){
+          console.log(numeros[index]);
+          console.log(data.response);
+        }
+      }
+      timeline.push(test);
+    }
+
+    var ahora_si = {
+      type: "html-keyboard-response",
+      choices: ['Enter'],
+      stimulus: `
+        <p>Ahora sí, arrancamos el experimento.</p>
+        <p>Recuerda hacerlo lo más rápido posible.</p>
+      `,
+      post_trial_gap: 1500,
+      on_finish: function(data){
+          tiempo_anterior = data.time_elapsed + 1500;
+      }
+    };
+    timeline.push(ahora_si);
+
+    var tiempos = [] , resultados = [], tiempo_anterior = 0;
+
+    var numeros = jsPsych.randomization.sampleWithReplacement(array,cantidad_de_tests);
+    for (let index = 0; index < cantidad_de_tests; index++) {
+      var test = {
+        type: 'html-keyboard-response',
+        stimulus: `<p>Si el número en pantalla es <span style = "color: red; font-weight: bold">mayor</span> 
+          a ${numero_que_busco}, presiona la tecla <span style = "color: red; font-weight: bold">
+            ${invierto ? "B" : "Y"}</span>.</p>
+            <p>Si el número en pantalla es <span style = "color: blue; font-weight: bold">menor</span> 
+          a ${numero_que_busco}, presiona la tecla <span style = "color: blue; font-weight: bold">
+            ${invierto ? "Y" : "B"}</span>.</p>
+        <h1 style = 'font-size: 15vw'>${numeros[index]}</h1>`,
+        choices: ['y', 'b'] ,
+        on_finish: function(data){
+          tiempos.push(data.time_elapsed - tiempo_anterior);
+          console.log(data.time_elapsed - tiempo_anterior);
+          tiempo_anterior = data.time_elapsed;
+          //console.log(numeros[index]);
+          if(invierto){
+            if(numeros[index]<(rango/2)){resultados.push(data.response == 'y')}
+            else{resultados.push(data.response == 'b')}
+          }
+          else{
+            if(numeros[index]<(rango/2)){resultados.push(data.response == 'b')}
+            else{resultados.push(data.response == 'y')}
+          }
+        }
+      }
+      timeline.push(test);
+    }
+   
+   
+    /* start the experiment */
+    jsPsych.init({
+      timeline: timeline,
+      on_finish: async function() {
+        // mostrame.stimulus = jsPsych.data[0].response;
+        //jsPsych.data.displayData();
+
+        const { data, error } = await supabase
+        .from('respuestas')
+        .insert([
+          { invertido: Boolean(invierto), tiempo: tiempos, numero_mostrado: numeros, correcto: resultados }
+        ])
+      }
+    });
+
+    
+
+  </script>
+</html>
