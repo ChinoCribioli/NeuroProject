@@ -23,7 +23,7 @@
 
     var invierto = jsPsych.randomization.sampleWithReplacement([1,0],1)[0];
     console.log(invierto);
-    var rango = 100 , cantidad_de_tests = 10 , numero_que_busco = rango/2;
+    var rango = 100 , cantidad_de_tests = 50 , numero_que_busco = rango/2;
     var array = [];
     for (let index = 1; index <= rango; index++) {
       if(index != numero_que_busco) array.push(index);
@@ -34,7 +34,7 @@
       choices: ['Enter'],
       stimulus: `
         <p>En este experimento de no más de 4 minutos, verás números del 1 al ${rango}.</p> <p>Tu tarea consistirá 
-          en, en cada caso, determinar si el número es mayor o menor a ${numero_que_busco} 
+          en, para cada caso, determinar si el número es mayor o menor a ${numero_que_busco} 
           lo más rápido posible.</p>
         <p>Si el número en pantalla es <span style = "color: red; font-weight: bold">mayor</span> 
           a ${numero_que_busco}, presiona la tecla <span style = "color: red; font-weight: bold">
@@ -54,6 +54,7 @@
       choices: ['Enter'],
       stimulus: `
         <p>Vamos con algunos números de prueba...</p>
+        <p>Persiona <strong>Enter</strong>.</p>
       `,
       post_trial_gap: 1500
     };
@@ -81,12 +82,16 @@
       timeline.push(test);
     }
 
+    var tiempos = [] , resultados = [], tiempo_anterior = 0;
+    var puntaje = 0, tiempo_total = 0;
+
     var ahora_si = {
       type: "html-keyboard-response",
       choices: ['Enter'],
       stimulus: `
         <p>Ahora sí, arrancamos el experimento.</p>
         <p>Recuerda hacerlo lo más rápido posible.</p>
+        <p>Persiona <strong>Enter</strong>.</p>
       `,
       post_trial_gap: 1500,
       on_finish: function(data){
@@ -95,7 +100,6 @@
     };
     timeline.push(ahora_si);
 
-    var tiempos = [] , resultados = [], tiempo_anterior = 0;
 
     var numeros = jsPsych.randomization.sampleWithReplacement(array,cantidad_de_tests);
     for (let index = 0; index < cantidad_de_tests; index++) {
@@ -111,9 +115,9 @@
         choices: ['y', 'b'] ,
         on_finish: function(data){
           tiempos.push(data.time_elapsed - tiempo_anterior);
+          console.log(numeros[index]);
           console.log(data.time_elapsed - tiempo_anterior);
           tiempo_anterior = data.time_elapsed;
-          //console.log(numeros[index]);
           if(invierto){
             if(numeros[index]<(rango/2)){resultados.push(data.response == 'y')}
             else{resultados.push(data.response == 'b')}
@@ -126,24 +130,43 @@
       }
       timeline.push(test);
     }
-   
-   
-    /* start the experiment */
-    jsPsych.init({
-      timeline: timeline,
-      on_finish: async function() {
-        // mostrame.stimulus = jsPsych.data[0].response;
-        //jsPsych.data.displayData();
 
+    var despedida = {
+      type: "html-keyboard-response",
+      choices: jsPsych.NO_KEYS,
+      
+      on_start: async function(){
         const { data, error } = await supabase
         .from('respuestas')
         .insert([
           { invertido: Boolean(invierto), tiempo: tiempos, numero_mostrado: numeros, correcto: resultados }
         ])
-      }
-    });
+      },
 
-    
+      stimulus: function(){
+        for (let index = 0; index < cantidad_de_tests; index++) {
+          if(resultados[index]){puntaje++;}
+          tiempo_total += tiempos[index];
+          //console.log(tiempo_total);
+          //console.log(puntaje);
+        }        
+        
+        return `
+        <p>¡Muchas gracias por participar!</p>
+        <p>Tu puntaje fue de ${puntaje} respuestas correctas con un tiempo de ${tiempo_total/1000} segundos.</p>
+        <p>¡Hasta la proxima!</p>
+        `
+      }
+    };
+    timeline.push(despedida);
+   
+    /* start the experiment */
+    jsPsych.init({
+      timeline: timeline,
+      // on_finish: function() {
+      //   jsPsych.data.displayData();
+      // }
+    });
 
   </script>
 </html>
