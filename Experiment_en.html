@@ -24,9 +24,9 @@
     var invert = jsPsych.randomization.sampleWithReplacement([1,0],1)[0];
     console.log(invert);
     var range = 100 , number_of_tests = 50 , searched_number = range/2;
-    var array = [];
+    var possible_numbers = [];
     for (let index = 1; index <= range; index++) {
-      if(index != searched_number) array.push(index);
+      if(index != searched_number) possible_numbers.push(index);
     }
     
     var instructions = {
@@ -59,7 +59,7 @@
     
     
 
-    var numbers = jsPsych.randomization.sampleWithReplacement(array,5);
+    var numbers = jsPsych.randomization.sampleWithReplacement(possible_numbers,5);
     for (let index = 0; index < 5; index++) {
       var test = {
         type: 'html-keyboard-response',
@@ -96,7 +96,7 @@
     timeline.push(start_of_the_experiment);
 
 
-    var numbers = jsPsych.randomization.sampleWithReplacement(array,number_of_tests);
+    var numbers = jsPsych.randomization.sampleWithReplacement(possible_numbers,number_of_tests);
     for (let index = 0; index < number_of_tests; index++) {
       var test = {
         type: 'html-keyboard-response',
