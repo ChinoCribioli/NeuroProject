@@ -14,8 +14,8 @@
 
     var SUPABASE_URL = 'https://snjehmlvdsfnxlcfydzj.supabase.co'
     var SUPABASE_KEY =
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIiwiaWF0IjoxNjI3MTg5MTQzLCJleHAiOjE5NDI3NjUxNDN9.Z025UViKvbY5lraGseW7mPUwdpfV7huemcZ38z2J2m8'
-    
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTYyNzE4OTE0MywiZXhwIjoxOTQyNzY1MTQzfQ.5OvES3o3jPwM6yvernvulxnh9kTZENAJI2vqwQlyP1E'
+      
     var supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
     window.userToken = null
 
@@ -25,7 +25,7 @@
     console.log(invert);
     var range = 100 , number_of_tests = 50 , searched_number = range/2;
     var array = [];
-    for (let index = 1; index <= rango; index++) {
+    for (let index = 1; index <= range; index++) {
       if(index != searched_number) array.push(index);
     }
     
@@ -39,7 +39,7 @@
             press the key <span style = "color: red; font-weight: bold">${invert ? "B" : "Y"}</span>.</p>
         <p>If the number in screen is <span style = "color: blue; font-weight: bold">smaller</span> than 
             ${searched_number}, press the key <span style = "color: blue; font-weight: bold">
-            ${invierto ? "Y" : "B"}</span>.</p>
+            ${invert ? "Y" : "B"}</span>.</p>
         <p>By continuing, you are indicating your consent to participate in this experiment anonymously.</p>
         <p>Press <strong>Enter</strong> to start.</p>
       `,
@@ -131,9 +131,10 @@
       on_start: async function(){
         const { data, error } = await supabase //here we upload the data to the database to analyze it later
         .from('respuestas')
-        .insert([//if the keys were inverted, the time that each number took to decide, the numbers theirleves, and if the answers were correct
+        .insert([//We store if the keys were inverted, the time that each number took to decide, the numbers theirleves, and if the answers were correct
           { invertido: Boolean(invert), tiempo: times, numero_mostrado: numbers, correcto: results }
         ])
+        console.log("Database updated!")
       },
 
       stimulus: function(){
@@ -153,7 +154,7 @@
    
     /* start the experiment */
     jsPsych.init({
-      timeline: timeline
+      timeline: timeline,
     });
 
   </script>
